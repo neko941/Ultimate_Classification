@@ -21,13 +21,14 @@ from utils.general import callback
 
 from utils.metrics import F1_score
 
-from models.VGG16 import mtVGG16
-
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
+
+from models.VGG16 import mtVGG16
+from keras.applications import VGG16 as tVGG16 
 
 def train(model, save_name, train_set, val_set, epochs=50, learning_rate=0.0001):
     model.compile(loss = 'categorical_crossentropy',
