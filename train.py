@@ -143,7 +143,7 @@ def main(opt):
     if opt.mtVGG16:
         mtVGG16_model = mtVGG16(input_shape=IMGSZ+(3,), output_units=len(CLASSES))
 
-        result_VGG19 = train(model=mtVGG16_model,
+        result_mtVGG16 = train(model=mtVGG16_model,
                             train_set=train_generator,
                             val_set=test_generator,
                             epochs=opt.epochs,
@@ -153,7 +153,7 @@ def main(opt):
     if opt.tVGG16:
         tVGG16_model = tVGG16(input_shape=IMGSZ+(3,), output_units=len(CLASSES))
 
-        result_VGG19 = train(model=tVGG16_model,
+        result_tVGG16 = train(model=tVGG16_model,
                             train_set=train_generator,
                             val_set=test_generator,
                             epochs=opt.epochs,
