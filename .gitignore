@@ -1,0 +1,6 @@
+00.Animals
+
+*.h5
+
+venv
+__pycache__/
