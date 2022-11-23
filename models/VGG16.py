@@ -4,7 +4,7 @@ from keras.layers import MaxPool2D
 from keras.layers import Flatten
 from keras.layers import Dense
 
-def stVGG16(input_shape=(224, 224, 3), output_units=5):
+def mtVGG16(input_shape=(224, 224, 3), output_units=5):
     # Generate the model
     model = Sequential()
     # Layer 1: Convolutional

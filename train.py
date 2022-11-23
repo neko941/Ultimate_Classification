@@ -16,16 +16,16 @@ from keras.metrics import BinaryAccuracy
 
 from keras.preprocessing.image import ImageDataGenerator
 
-from utils.general import display
-from utils.general import callback
-
-from utils.metrics import F1_score
-
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
+
+from utils.general import display
+from utils.general import callback
+
+from utils.metrics import F1_score
 
 from models.VGG16 import mtVGG16
 from keras.applications import VGG16 as tVGG16 
@@ -78,8 +78,8 @@ def train(model, save_name, train_set, val_set, epochs=50, learning_rate=0.0001)
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     # parser.add_argument('--weights', type=str, default=ROOT / 'yolov5s.pt', help='initial weights path')
-    parser.add_argument('--epochs', type=int, default=100, help='total training epochs')
-    parser.add_argument('--batch-size', type=int, default=16, help='total batch size for all GPUs, -1 for autobatch')
+    parser.add_argument('--epochs', type=int, default=50, help='total training epochs')
+    parser.add_argument('--batch-size', type=int, default=128, help='total batch size for all GPUs, -1 for autobatch')
     parser.add_argument('--imgsz', '--img', '--img-size', type=int, default=640, help='train, val image size (pixels)')
     parser.add_argument('--cache', type=str, nargs='?', const='ram', help='image --cache ram/disk')
     parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam', 'AdamW'], default='Adam', help='optimizer')
@@ -100,7 +100,7 @@ def parse_opt(known=False):
 def main(opt):
     DIRECTORY = "00.Animals"
     CLASSES = [dir for root, directories, files in os.walk(DIRECTORY) for dir in directories]
-    BATCH = 32 # 128
+    BATCH = opt.batch_size # 128
     IMGSZ = (256, 256)
 
     train_datagen = ImageDataGenerator(

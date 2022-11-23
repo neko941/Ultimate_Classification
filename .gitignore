@@ -1,5 +1,6 @@
 00.Animals
-
+.gitattributes
+.gitignore
 *.h5
 
 venv
