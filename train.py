@@ -36,7 +36,7 @@ from models.custom import customize_model
 from models.VGG16 import mtVGG16
 from keras.applications import VGG16
 
-optimizer = {
+optimizer_dict = {
     'SGD': SGD,
     'Adam' : Adam
 }
@@ -59,11 +59,10 @@ def callback(name, patience=100, save_dir='result'):
 
     return [checkpoint_best, checkpoint_last, earlystop]
 
-def train(model, save_name, train_set, val_set, patience=100, epochs=50, learning_rate=0.0001, weight=None, save_dir='result',optz=Adam):
-    if weight is not None: model.load_weights(weight)
+def train(model, save_name, train_set, val_set, patience=100, epochs=50, learning_rate=0.0001, save_dir='result',optz=Adam):
+    
     print(f'optimizer: {optz}')
-    optimizer = optimizer[optz]
-    print(f'weight: {weight}')
+    optimizer = optimizer_dict[optz]
     print(f'epochs: {epochs}')
     print(f'patience: {patience}')
     print(f'learning_rate: {learning_rate}')
@@ -183,7 +182,7 @@ def main(opt):
 
     if opt.mtVGG16:
         mtVGG16_model = mtVGG16(input_shape=IMGSZ+(3,), output_units=len(CLASSES))
-
+        if opt.weight is not None: mtVGG16_model.load_weights(opt.weight)       
         result_mtVGG16 = train(model=mtVGG16_model,
                             train_set=train_generator,
                             val_set=test_generator,
@@ -191,9 +190,8 @@ def main(opt):
                             save_name='mtVGG16', 
                             learning_rate=0.0001,
                             patience=100,
-                            weight=opt.weight,
                             save_dir=opt.save_dir,
-                            optimizer=opt.optimizer)
+                            optz=opt.optimizer)
     
     if opt.tVGG16:
         tVGG16_model = customize_model(model=VGG16, 
@@ -207,9 +205,8 @@ def main(opt):
                             save_name='tVGG16', 
                             learning_rate=0.0001,
                             patience=100,
-                            weight=opt.weight,
                             save_dir=opt.save_dir,
-                            optimizer=opt.optimizer)
+                            optz=opt.optimizer)
 
 def run(**kwargs):
     # Usage: import train; train.run(data='coco128.yaml', imgsz=320, weights='yolov5m.pt')
