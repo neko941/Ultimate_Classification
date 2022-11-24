@@ -132,7 +132,7 @@ def parse_opt(known=False):
 
 def main(opt):
     # opt.save_dir = str(increment_path(Path(opt.project) / opt.name, exist_ok=not opt.overwrite))
-    opt.save_dir = str(increment_path(Path(opt.project) / opt.name, overwrite=opt.overwrite))
+    opt.save_dir = str(increment_path(Path(opt.project) / opt.name, overwrite=opt.overwrite, mkdir=True))
     DIRECTORY = opt.source
     CLASSES = [dir for root, directories, files in os.walk(DIRECTORY) for dir in directories]
     open(Path(opt.save_dir) / 'classes.txt', 'w').writelines(CLASSES)
