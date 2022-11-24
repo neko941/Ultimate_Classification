@@ -79,12 +79,13 @@ def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     # parser.add_argument('--weights', type=str, default=ROOT / 'yolov5s.pt', help='initial weights path')
     parser.add_argument('--epochs', type=int, default=50, help='total training epochs')
-    parser.add_argument('--batch-size', type=int, default=128, help='total batch size for all GPUs, -1 for autobatch')
-    parser.add_argument('--imgsz', type=int, default=640, help='train, val image size (pixels)')
+    parser.add_argument('--batchsz', type=int, default=128, help='total batch size for all GPUs, -1 for autobatch')
+    parser.add_argument('--imgsz', type=int, default=224, help='train, val image size (pixels)')
     parser.add_argument('--cache', type=str, nargs='?', const='ram', help='image --cache ram/disk')
     parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam', 'AdamW'], default='Adam', help='optimizer')
     parser.add_argument('--project', default=ROOT / 'runs/train', help='save to project/name')
     parser.add_argument('--name', default='exp', help='save to project/name')
+    parser.add_argument('--source', default='data', help='dataset')
     parser.add_argument('--overwrite', action='store_true', help='existing project/name ok, do not increment')
     parser.add_argument('--patience', type=int, default=100, help='EarlyStopping patience (epochs without improvement)')
     parser.add_argument('--save-period', type=int, default=-1, help='Save checkpoint every x epochs (disabled if < 1)')
@@ -96,10 +97,10 @@ def parse_opt(known=False):
     return parser.parse_known_args()[0] if known else parser.parse_args()
 
 def main(opt):
-    DIRECTORY = "00.Animals"
+    DIRECTORY = opt.source
     CLASSES = [dir for root, directories, files in os.walk(DIRECTORY) for dir in directories]
-    BATCH = opt.batch_size # 128
-    IMGSZ = (256, 256)
+    BATCH = opt.batchsz # 128
+    IMGSZ = (opt.imgsz, opt.imgsz)
 
     train_datagen = ImageDataGenerator(
         featurewise_center=True,
