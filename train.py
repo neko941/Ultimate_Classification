@@ -30,7 +30,9 @@ from utils.metrics import F1_score
 from models.VGG16 import mtVGG16
 from keras.applications import VGG16 as tVGG16 
 
-def train(model, save_name, train_set, val_set, patience=100, epochs=50, learning_rate=0.0001):
+def train(model, save_name, train_set, val_set, patience=100, epochs=50, learning_rate=0.0001, weight=None):
+    if weight is not None: model.load_weights(weight)
+
     model.compile(loss = 'categorical_crossentropy',
                   optimizer=Adam(learning_rate),
                   metrics=[
@@ -81,13 +83,15 @@ def parse_opt(known=False):
     parser.add_argument('--epochs', type=int, default=50, help='total training epochs')
     parser.add_argument('--batchsz', type=int, default=128, help='total batch size for all GPUs, -1 for autobatch')
     parser.add_argument('--imgsz', type=int, default=224, help='train, val image size (pixels)')
+    parser.add_argument('--source', default='data', help='dataset')
+    parser.add_argument('--patience', type=int, default=100, help='EarlyStopping patience (epochs without improvement)')
+    parser.add_argument('--weight', type=str, default=None, help='pretrain')
+    
     parser.add_argument('--cache', type=str, nargs='?', const='ram', help='image --cache ram/disk')
     parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam', 'AdamW'], default='Adam', help='optimizer')
     parser.add_argument('--project', default=ROOT / 'runs/train', help='save to project/name')
     parser.add_argument('--name', default='exp', help='save to project/name')
-    parser.add_argument('--source', default='data', help='dataset')
     parser.add_argument('--overwrite', action='store_true', help='existing project/name ok, do not increment')
-    parser.add_argument('--patience', type=int, default=100, help='EarlyStopping patience (epochs without improvement)')
     parser.add_argument('--save-period', type=int, default=-1, help='Save checkpoint every x epochs (disabled if < 1)')
     parser.add_argument('--seed', type=int, default=0, help='Global training seed')
 
@@ -148,7 +152,8 @@ def main(opt):
                             epochs=opt.epochs,
                             save_name='mtVGG16', 
                             learning_rate=0.0001,
-                            patience=100)
+                            patience=100,
+                            weight=opt.weight)
     
     if opt.tVGG16:
         tVGG16_model = tVGG16(input_shape=IMGSZ+(3,), output_units=len(CLASSES))
@@ -159,7 +164,8 @@ def main(opt):
                             epochs=opt.epochs,
                             save_name='tVGG16', 
                             learning_rate=0.0001,
-                            patience=100)
+                            patience=100,
+                            weight=opt.weight)
 
 def run(**kwargs):
     # Usage: import train; train.run(data='coco128.yaml', imgsz=320, weights='yolov5m.pt')
