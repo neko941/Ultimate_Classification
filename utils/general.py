@@ -1,5 +1,3 @@
-from keras.callbacks import ModelCheckpoint
-from keras.callbacks import EarlyStopping
 import matplotlib.pyplot as plt
 from pathlib import Path
 import os
@@ -28,24 +26,6 @@ def increment_path(path, overwrite=False, sep='', mkdir=False):
         path.mkdir(parents=True, exist_ok=True)  # make directory
 
     return path
-
-def callback(name, patience=100, save_dir='result'):
-    checkpoint_best = ModelCheckpoint(filepath=Path(save_dir) / "weights" / f"{name}_best.h5",
-                                      save_best_only=True,
-                                      save_weights_only=False,
-                                      verbose=0)
-
-    checkpoint_last = ModelCheckpoint(filepath=Path(save_dir) / "weights" / f"{name}_last.h5",
-                                      save_best_only=False,
-                                      save_weights_only=False,
-                                      verbose=0)
-
-    earlystop = EarlyStopping(monitor='val_loss',
-                              patience=patience,
-                              mode='min',
-                              min_delta=0.0001)
-
-    return [checkpoint_best, checkpoint_last, earlystop]
 
 def display(history, save_name):
     fig, ax = plt.subplots(1, 2, figsize=(10, 3))

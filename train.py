@@ -6,13 +6,18 @@ from pathlib import Path
 
 from keras.metrics import AUC
 from keras.metrics import Recall
-from keras.optimizers import Adam
 from keras.metrics import Precision
 from keras.metrics import TrueNegatives
 from keras.metrics import TruePositives
 from keras.metrics import FalsePositives
 from keras.metrics import FalseNegatives
 from keras.metrics import BinaryAccuracy
+
+from keras.optimizers import SGD
+from keras.optimizers import Adam
+
+from keras.callbacks import EarlyStopping
+from keras.callbacks import ModelCheckpoint
 
 from keras.preprocessing.image import ImageDataGenerator
 
@@ -23,20 +28,47 @@ if str(ROOT) not in sys.path:
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
 from utils.general import increment_path
-
 from utils.general import display
-from utils.general import callback
 
 from utils.metrics import F1_score
 
+from models.custom import customize_model
 from models.VGG16 import mtVGG16
-from keras.applications import VGG16 as tVGG16 
+from keras.applications import VGG16
 
-def train(model, save_name, train_set, val_set, patience=100, epochs=50, learning_rate=0.0001, weight=None, save_dir='result'):
+optimizer = {
+    'SGD': SGD,
+    'Adam' : Adam
+}
+
+def callback(name, patience=100, save_dir='result'):
+    checkpoint_best = ModelCheckpoint(filepath=Path(save_dir) / "weights" / f"{name}_best.h5",
+                                      save_best_only=True,
+                                      save_weights_only=False,
+                                      verbose=0)
+
+    checkpoint_last = ModelCheckpoint(filepath=Path(save_dir) / "weights" / f"{name}_last.h5",
+                                      save_best_only=False,
+                                      save_weights_only=False,
+                                      verbose=0)
+
+    earlystop = EarlyStopping(monitor='val_loss',
+                              patience=patience,
+                              mode='min',
+                              min_delta=0.0001)
+
+    return [checkpoint_best, checkpoint_last, earlystop]
+
+def train(model, save_name, train_set, val_set, patience=100, epochs=50, learning_rate=0.0001, weight=None, save_dir='result',optz=Adam):
     if weight is not None: model.load_weights(weight)
-
+    print(f'optimizer: {optz}')
+    optimizer = optimizer[optz]
+    print(f'weight: {weight}')
+    print(f'epochs: {epochs}')
+    print(f'patience: {patience}')
+    print(f'learning_rate: {learning_rate}')
     model.compile(loss = 'categorical_crossentropy',
-                  optimizer=Adam(learning_rate),
+                  optimizer=optimizer(learning_rate),
                   metrics=[
                       BinaryAccuracy(name='accuracy'),
                       TruePositives(name='tp'),
@@ -91,11 +123,11 @@ def parse_opt(known=False):
     parser.add_argument('--project', default=ROOT / 'runs/train', help='save to project/name')
     parser.add_argument('--name', default='exp', help='save to project/name')
     parser.add_argument('--overwrite', action='store_true', help='existing project/name ok, do not increment')
+    parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam'], default='Adam', help='optimizer')
     
-    parser.add_argument('--cache', type=str, nargs='?', const='ram', help='image --cache ram/disk')
-    parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam', 'AdamW'], default='Adam', help='optimizer')
-    parser.add_argument('--save-period', type=int, default=-1, help='Save checkpoint every x epochs (disabled if < 1)')
-    parser.add_argument('--seed', type=int, default=0, help='Global training seed')
+    # parser.add_argument('--cache', type=str, nargs='?', const='ram', help='image --cache ram/disk')
+    # parser.add_argument('--save-period', type=int, default=-1, help='Save checkpoint every x epochs (disabled if < 1)')
+    # parser.add_argument('--seed', type=int, default=0, help='Global training seed')
 
     parser.add_argument('--mtVGG16', action='store_true', help='Using my tensorflow VGG16 model')
     parser.add_argument('--tVGG16', action='store_true', help='Using tensorflow VGG16 model')
@@ -160,10 +192,13 @@ def main(opt):
                             learning_rate=0.0001,
                             patience=100,
                             weight=opt.weight,
-                            save_dir=opt.save_dir)
+                            save_dir=opt.save_dir,
+                            optimizer=opt.optimizer)
     
     if opt.tVGG16:
-        tVGG16_model = tVGG16(input_shape=IMGSZ+(3,), output_units=len(CLASSES))
+        tVGG16_model = customize_model(model=VGG16, 
+                                output_units=len(CLASSES),
+                                input_shape=IMGSZ+(3,))
 
         result_tVGG16 = train(model=tVGG16_model,
                             train_set=train_generator,
@@ -172,7 +207,9 @@ def main(opt):
                             save_name='tVGG16', 
                             learning_rate=0.0001,
                             patience=100,
-                            weight=opt.weight)
+                            weight=opt.weight,
+                            save_dir=opt.save_dir,
+                            optimizer=opt.optimizer)
 
 def run(**kwargs):
     # Usage: import train; train.run(data='coco128.yaml', imgsz=320, weights='yolov5m.pt')
