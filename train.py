@@ -131,8 +131,11 @@ def parse_opt(known=False):
     return parser.parse_known_args()[0] if known else parser.parse_args()
 
 def main(opt):
+    # opt.save_dir = str(increment_path(Path(opt.project) / opt.name, exist_ok=not opt.overwrite))
+    opt.save_dir = str(increment_path(Path(opt.project) / opt.name, overwrite=opt.overwrite))
     DIRECTORY = opt.source
     CLASSES = [dir for root, directories, files in os.walk(DIRECTORY) for dir in directories]
+    open(Path(opt.save_dir) / 'classes.txt', 'w').writelines(CLASSES)
     BATCH = opt.batchsz # 128
     IMGSZ = (opt.imgsz, opt.imgsz)
 
@@ -174,8 +177,7 @@ def main(opt):
                                                     subset="validation",
                                                     classes=CLASSES)
 
-    # opt.save_dir = str(increment_path(Path(opt.project) / opt.name, exist_ok=True if not opt.overwrite else False))
-    opt.save_dir = str(increment_path(Path(opt.project) / opt.name, overwrite=opt.overwrite))
+    
 
     if opt.mtVGG16:
         mtVGG16_model = mtVGG16(input_shape=IMGSZ+(3,), output_units=len(CLASSES))
