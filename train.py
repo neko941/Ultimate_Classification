@@ -22,6 +22,8 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
+from utils.general import increment_path
+
 from utils.general import display
 from utils.general import callback
 
@@ -30,7 +32,7 @@ from utils.metrics import F1_score
 from models.VGG16 import mtVGG16
 from keras.applications import VGG16 as tVGG16 
 
-def train(model, save_name, train_set, val_set, patience=100, epochs=50, learning_rate=0.0001, weight=None):
+def train(model, save_name, train_set, val_set, patience=100, epochs=50, learning_rate=0.0001, weight=None, save_dir='result'):
     if weight is not None: model.load_weights(weight)
 
     model.compile(loss = 'categorical_crossentropy',
@@ -54,7 +56,7 @@ def train(model, save_name, train_set, val_set, patience=100, epochs=50, learnin
     history = model.fit(train_set,
                         validation_data=val_set,
                         epochs=epochs,
-                        callbacks=callback(save_name, patience=patience),
+                        callbacks=callback(save_name, patience=patience, save_dir=save_dir),
                         verbose=1)
     # Plotting Accuracy, val_accuracy, loss, val_loss
     display(history=history,
@@ -86,11 +88,11 @@ def parse_opt(known=False):
     parser.add_argument('--source', default='data', help='dataset')
     parser.add_argument('--patience', type=int, default=100, help='EarlyStopping patience (epochs without improvement)')
     parser.add_argument('--weight', type=str, default=None, help='pretrain')
+    parser.add_argument('--project', default=ROOT / 'runs/train', help='save to project/name')
+    parser.add_argument('--name', default='exp', help='save to project/name')
     
     parser.add_argument('--cache', type=str, nargs='?', const='ram', help='image --cache ram/disk')
     parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam', 'AdamW'], default='Adam', help='optimizer')
-    parser.add_argument('--project', default=ROOT / 'runs/train', help='save to project/name')
-    parser.add_argument('--name', default='exp', help='save to project/name')
     parser.add_argument('--overwrite', action='store_true', help='existing project/name ok, do not increment')
     parser.add_argument('--save-period', type=int, default=-1, help='Save checkpoint every x epochs (disabled if < 1)')
     parser.add_argument('--seed', type=int, default=0, help='Global training seed')
@@ -143,6 +145,9 @@ def main(opt):
                                                     interpolation="nearest",
                                                     subset="validation",
                                                     classes=CLASSES)
+
+    opt.save_dir = str(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))
+
     if opt.mtVGG16:
         mtVGG16_model = mtVGG16(input_shape=IMGSZ+(3,), output_units=len(CLASSES))
 
@@ -153,7 +158,8 @@ def main(opt):
                             save_name='mtVGG16', 
                             learning_rate=0.0001,
                             patience=100,
-                            weight=opt.weight)
+                            weight=opt.weight,
+                            save_dir=opt.save_dir)
     
     if opt.tVGG16:
         tVGG16_model = tVGG16(input_shape=IMGSZ+(3,), output_units=len(CLASSES))
