@@ -90,10 +90,10 @@ def parse_opt(known=False):
     parser.add_argument('--weight', type=str, default=None, help='pretrain')
     parser.add_argument('--project', default=ROOT / 'runs/train', help='save to project/name')
     parser.add_argument('--name', default='exp', help='save to project/name')
+    parser.add_argument('--overwrite', action='store_true', help='existing project/name ok, do not increment')
     
     parser.add_argument('--cache', type=str, nargs='?', const='ram', help='image --cache ram/disk')
     parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam', 'AdamW'], default='Adam', help='optimizer')
-    parser.add_argument('--overwrite', action='store_true', help='existing project/name ok, do not increment')
     parser.add_argument('--save-period', type=int, default=-1, help='Save checkpoint every x epochs (disabled if < 1)')
     parser.add_argument('--seed', type=int, default=0, help='Global training seed')
 
@@ -146,7 +146,8 @@ def main(opt):
                                                     subset="validation",
                                                     classes=CLASSES)
 
-    opt.save_dir = str(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))
+    # opt.save_dir = str(increment_path(Path(opt.project) / opt.name, exist_ok=True if not opt.overwrite else False))
+    opt.save_dir = str(increment_path(Path(opt.project) / opt.name, overwrite=opt.overwrite))
 
     if opt.mtVGG16:
         mtVGG16_model = mtVGG16(input_shape=IMGSZ+(3,), output_units=len(CLASSES))

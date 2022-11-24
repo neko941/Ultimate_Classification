@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import os
 
-def increment_path(path, exist_ok=False, sep='', mkdir=False):
+def increment_path(path, overwrite=False, sep='', mkdir=False):
     # Increment file or directory path, i.e. runs/exp --> runs/exp{sep}2, runs/exp{sep}3, ... etc.
     path = Path(path)  # os-agnostic
-    if path.exists() and not exist_ok:
+    if path.exists() and not overwrite:
         path, suffix = (path.with_suffix(''), path.suffix) if path.is_file() else (path, '')
 
         # Method 1
