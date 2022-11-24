@@ -135,7 +135,7 @@ def main(opt):
     opt.save_dir = str(increment_path(Path(opt.project) / opt.name, overwrite=opt.overwrite, mkdir=True))
     DIRECTORY = opt.source
     CLASSES = [dir for root, directories, files in os.walk(DIRECTORY) for dir in directories]
-    open(Path(opt.save_dir) / 'classes.txt', 'w').writelines(CLASSES)
+    open(Path(opt.save_dir) / 'classes.txt', 'w').writelines('\n'.join(CLASSES))
     BATCH = opt.batchsz # 128
     IMGSZ = (opt.imgsz, opt.imgsz)
 
