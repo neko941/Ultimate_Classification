@@ -30,7 +30,7 @@ ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 from utils.general import increment_path
 from utils.general import display
 
-from utils.metrics import F1_score
+# from utils.metrics import F1_score
 
 from models.custom import customize_model
 from models.VGG16 import mtVGG16
@@ -40,24 +40,6 @@ optimizer_dict = {
     'SGD': SGD,
     'Adam' : Adam
 }
-
-def callback(name, patience=100, save_dir='result'):
-    checkpoint_best = ModelCheckpoint(filepath=Path(save_dir) / "weights" / f"{name}_best.h5",
-                                      save_best_only=True,
-                                      save_weights_only=False,
-                                      verbose=0)
-
-    checkpoint_last = ModelCheckpoint(filepath=Path(save_dir) / "weights" / f"{name}_last.h5",
-                                      save_best_only=False,
-                                      save_weights_only=False,
-                                      verbose=0)
-
-    earlystop = EarlyStopping(monitor='val_loss',
-                              patience=patience,
-                              mode='min',
-                              min_delta=0.0001)
-
-    return [checkpoint_best, checkpoint_last, earlystop]
 
 def train(model, save_name, train_set, val_set, patience=100, epochs=50, learning_rate=0.0001, save_dir='result',optz=Adam):
     
@@ -78,20 +60,35 @@ def train(model, save_name, train_set, val_set, patience=100, epochs=50, learnin
                       Recall(name='recall'),
                       AUC(name='auc'),
                       AUC(name='prc', curve='PR'),
-                      F1_score
+                    #   F1_score
                       ])
     
     model._name = save_name
     model.summary()      
+
+    checkpoint_best = ModelCheckpoint(filepath=Path(save_dir) / "weights" / f"{save_name}_best.h5",
+                                      save_best_only=True,
+                                      save_weights_only=False,
+                                      verbose=0)
+
+    checkpoint_last = ModelCheckpoint(filepath=Path(save_dir) / "weights" / f"{save_name}_last.h5",
+                                      save_best_only=False,
+                                      save_weights_only=False,
+                                      verbose=0)
+
+    earlystop = EarlyStopping(monitor='val_loss',
+                              patience=patience,
+                              mode='min',
+                              min_delta=0.0001)
     
     history = model.fit(train_set,
                         validation_data=val_set,
                         epochs=epochs,
-                        callbacks=callback(save_name, patience=patience, save_dir=save_dir),
+                        callbacks=[checkpoint_best, checkpoint_last, earlystop],
                         verbose=1)
     # Plotting Accuracy, val_accuracy, loss, val_loss
     display(history=history,
-            save_name=f'{save_name}_result.png')
+            save_name=Path(save_dir) / f'{save_name}_result.png')
     
     # Predict Data Test
     pred = model.predict(val_set)
